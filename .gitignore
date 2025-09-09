@@ -12,7 +12,6 @@ venv/
 build/
 dist/
 dist_new/
-*.spec
 
 # Packaging
 *.egg-info/
