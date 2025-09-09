@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>小郭照相-大頭照整理工具</title>
+    <style>
+      :root {
+        /* Dracula palette */
+        --bg: #282a36;            /* background */
+        --panel: #2b2d3a;         /* slightly lighter than bg for cards */
+        --text: #f8f8f2;          /* foreground */
+        --muted: #6272a4;         /* comment */
+        --border: #44475a;        /* current line */
+        --input-bg: #1f2130;      /* custom dark input */
+        --input-border: #44475a;
+        --btn-bg: #3a3d52;        /* neutral button */
+        --btn-border: #44475a;
+        --btn-text: #f8f8f2;
+        --btn-primary-bg: #bd93f9;/* purple */
+        --btn-primary-border: #a283f0;
+        --btn-primary-text: #1b1c24;
+        --code-bg: #1e1f29;       /* code block */
+      }
+      [data-theme="light"] {
+        --bg: #f6f7fb;
+        --panel: #ffffff;
+        --text: #1f2937;
+        --muted: #6b7280;
+        --border: #e5e7eb;
+        --input-bg: #ffffff;
+        --input-border: #cbd5e1;
+        --btn-bg: #f3f4f6;
+        --btn-border: #cbd5e1;
+        --btn-text: #111827;
+        --btn-primary-bg: #2563eb;
+        --btn-primary-border: #1d4ed8;
+        --btn-primary-text: #ffffff;
+        --code-bg: #0b1020;
+      }
+      html { background: var(--bg); color: var(--text); }
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Arial, "蘋果儷中黑", "微軟正黑體", sans-serif; margin: 24px; line-height: 1.5; }
+      .topbar { max-width: 980px; margin: 0 auto 12px; display:flex; align-items:center; justify-content:space-between; }
+      .title { font-size: 20px; font-weight: 700; letter-spacing: .2px; }
+      .toggle { display:flex; align-items:center; gap:8px; font-size:13px; color: var(--muted); }
+      .card { max-width: 980px; margin: 0 auto; border: 1px solid var(--border); background: var(--panel); border-radius: 12px; padding: 18px 20px; box-shadow: 0 6px 16px rgba(0,0,0,.18); }
+      label { display: block; margin: 12px 0 6px; font-weight: 600; }
+      input[type="text"] { width: 100%; padding: 10px 12px; background: var(--input-bg); color: var(--text); border: 1px solid var(--input-border); border-radius: 8px; font-size: 14px; }
+      select { padding: 8px 10px; background: var(--input-bg); color: var(--text); border: 1px solid var(--input-border); border-radius: 8px; }
+      .row { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+      .row button { padding: 8px 14px; border: 1px solid var(--btn-border); background: var(--btn-bg); color: var(--btn-text); border-radius: 8px; cursor: pointer; transition: .15s ease; }
+      .row button:hover { filter: brightness(1.1); transform: translateY(-1px); }
+      .row button.primary { background: var(--btn-primary-bg); color: var(--btn-primary-text); border-color: var(--btn-primary-border); }
+      .muted { color: var(--muted); font-size: 13px; }
+      pre { background: var(--code-bg); color: #d1d5db; padding: 12px; border-radius: 10px; border: 1px solid var(--border); overflow: auto; white-space: pre-wrap; word-break: break-word; }
+      .options { display: flex; align-items: center; gap: 16px; margin-top: 8px; flex-wrap: wrap; }
+      hr { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
+    </style>
+    <script>
+      (function(){
+        const stored = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = stored || (prefersDark ? 'dark' : 'light');
+        if (theme === 'light') document.documentElement.setAttribute('data-theme','light');
+        window.addEventListener('DOMContentLoaded', () => {
+          const cb = document.getElementById('themeToggle');
+          if (cb) {
+            cb.checked = document.documentElement.getAttribute('data-theme') !== 'light';
+            cb.addEventListener('change', () => {
+              const mode = cb.checked ? 'dark' : 'light';
+              if (mode === 'light') document.documentElement.setAttribute('data-theme','light'); else document.documentElement.removeAttribute('data-theme');
+              localStorage.setItem('theme', mode);
+            });
+          }
+        });
+      })();
+    </script>
+  </head>
+  <body>
+    <div class="topbar">
+      <div class="title">小郭照相-大頭照整理工具</div>
+      <label class="toggle">
+        深色模式
+        <input id="themeToggle" type="checkbox" />
+      </label>
+    </div>
+    <div class="card">
+      <form method="post">
+        <label for="folder">目標資料夾路徑</label>
+        <input id="folder" name="folder" type="text" value="{{ folder }}" placeholder="例如：C:\\Photos\\Session01" />
+
+        <div class="options">
+          <label><input type="checkbox" name="copy" {% if copy_flag %}checked{% endif %}> 以複製方式（保留原檔）</label>
+          <label><input type="checkbox" name="extract_qr" {% if extract_qr %}checked{% endif %}> 將子層 QR 資料夾內的 QR_*.jpg 搬至目標資料夾並刪除 QR 資料夾</label>
+        </div>
+
+        <label for="scope">處理範圍</label>
+        <select id="scope" name="scope">
+          <option value="current" {% if scope == 'current' %}selected{% endif %}>僅此資料夾</option>
+          <option value="subdirs" {% if scope == 'subdirs' %}selected{% endif %}>第一層子資料夾</option>
+          <option value="recursive" {% if scope == 'recursive' %}selected{% endif %}>此資料夾與所有子資料夾</option>
+        </select>
+
+        <div class="row">
+          <button type="submit" name="action" value="preview">預覽結果</button>
+          <button class="primary" type="submit" name="action" value="execute">開始處理</button>
+        </div>
+        <hr />
+        <h3>QR檔案搬移</h3>
+        <p class="muted">只執行「將子層 QR 資料夾內的 QR_*.jpg 搬至目標資料夾，並在非複製模式下清除空的 QR」。</p>
+        <div class="row">
+          <button type="submit" name="action" value="qr_preview">預覽結果</button>
+          <button class="primary" type="submit" name="action" value="qr_execute">開始處理</button>
+        </div>
+        <p class="muted">規則：擷取檔名中 IMGK 或 IMG_ 後緊接的 4 位數字，並建立對應資料夾；支援 .jpg/.jpeg。可選擇僅處理此資料夾、第一層子資料夾或遞迴處理全部。</p>
+      </form>
+
+      {% if output %}
+      <h2>輸出結果</h2>
+      <pre>{{ output }}</pre>
+      {% endif %}
+    </div>
+  </body>
+  </html>

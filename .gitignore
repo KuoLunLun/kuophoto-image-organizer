@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.venv/
+env/
+venv/
+
+# PyInstaller build artifacts
+build/
+dist/
+dist_new/
+*.spec
+
+# Packaging
+*.egg-info/
+
+# OS
+Thumbs.db
+*.log
+
+# Tests and temp
+tmp_test/
+
+# Archives
+*.zip
